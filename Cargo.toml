@@ -1,0 +1,46 @@
+[package]
+name = "quantx-core"
+authors = ["nubiv <h.horace0921@gmail.com>"]
+license = "MIT"
+description = "quantx-engine"
+repository = "https://github.com/nubiv/quantx-engine"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+# Data Struct
+rust_decimal = "1.37"
+rust_decimal_macros = "1.37"
+kanal = "0.1"
+parking_lot = "0.12"
+indexmap = "2.10"
+fnv = "1.0"
+smol_str = "0.3"
+
+# Async
+tokio = { version = "1.47", default-features = false, features = [
+    "rt-multi-thread",
+] }
+futures = "0.3"
+
+# Tracing
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
+
+# Serialization
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+# Error
+thiserror = "2.0"
+
+# Misc
+chrono = { version = "0.4", features = ["serde"] }
+rand = "0.9"
+charming = "0.6"
+toml = "0.9"
+spin_sleep = "1.3"
+derive_more = { version = "2.0", features = ["display", "constructor"] }
+
+[features]
+default = []

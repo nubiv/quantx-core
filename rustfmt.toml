@@ -1,0 +1,13 @@
+edition = "2024"
+max_width = 160
+hard_tabs = false
+tab_spaces = 4
+newline_style = "Auto"
+use_small_heuristics = "Default"
+match_block_trailing_comma = true
+reorder_imports = true
+use_try_shorthand = true
+
+imports_layout = "HorizontalVertical"
+imports_granularity = "Crate"
+group_imports = "StdExternalCrate"
