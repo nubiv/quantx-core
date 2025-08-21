@@ -2,8 +2,8 @@
 name = "quantx-core"
 authors = ["nubiv <h.horace0921@gmail.com>"]
 license = "MIT"
-description = "quantx-engine"
-repository = "https://github.com/nubiv/quantx-engine"
+description = "quantx-core"
+repository = "https://github.com/nubiv/quantx-core"
 version = "0.1.0"
 edition = "2024"
 
