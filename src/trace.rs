@@ -1,11 +1,11 @@
-use tracing::instrument::WithSubscriber;
-use tracing_appender;
+use derive_more::Constructor;
+use tracing::subscriber;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
-const DEFAULT_LOG_DIR: &'static str = "logs";
-const DEFAULT_LOG_PREFIX: &'static str = "log";
+const DEFAULT_LOG_DIR: &str = "logs";
+const DEFAULT_LOG_PREFIX: &str = "log";
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Constructor)]
 pub struct TracingSubscriber {
     filter_level: Option<TracingFilterLevel>,
     format: Option<TracingFormat>,
@@ -14,10 +14,6 @@ pub struct TracingSubscriber {
 }
 
 impl TracingSubscriber {
-    pub fn new() -> Self {
-        Self::default()
-    }
-
     pub fn with_filter_level(mut self, level: TracingFilterLevel) -> Self {
         self.filter_level = Some(level);
         self
@@ -65,6 +61,21 @@ impl TracingSubscriber {
         };
         let filter_layer = filter_layer_builder.with_default_directive(filter_level.into()).from_env_lossy();
         let subscriber = subscriber.with(filter_layer);
+
+        let timer = self.timer.unwrap_or_default();
+        match timer {
+            TracingTimer::Default => {
+                // Default timer is already set in FmtSubscriber
+            },
+            TracingTimer::Local => {
+                let local_timer = ChronoLocalTimer;
+                let timer_layer = tracing_subscriber::fmt::layer().with_timer(local_timer);
+                let subscriber = subscriber.with(timer_layer);
+                return subscriber.init();
+            },
+        }
+        // tracing_subscriber::layer::SubscriberExt::with(subscriber, layer);
+        // subscriber.with(tracing_subscriber::layer::SubscriberExt::with_timer());
 
         match format {
             TracingFormat::Plain => {
