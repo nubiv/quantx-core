@@ -108,7 +108,7 @@ impl TracingSubscriber {
         match (format, timer) {
             (TracingFormat::Plain, TracingTimer::Default) => {
                 let sub_builder = tracing_subscriber::FmtSubscriber::builder();
-                let subscriber = sub_builder.with_writer(non_blocking).finish();
+                let subscriber = sub_builder.with_ansi(false).with_writer(non_blocking).finish();
 
                 subscriber.with(filter_layer).init();
             },
@@ -116,13 +116,13 @@ impl TracingSubscriber {
                 let local_timer = ChronoLocalTimer;
 
                 let sub_builder = tracing_subscriber::FmtSubscriber::builder();
-                let subscriber = sub_builder.with_timer(local_timer).with_writer(non_blocking).finish();
+                let subscriber = sub_builder.with_ansi(false).with_timer(local_timer).with_writer(non_blocking).finish();
 
                 subscriber.with(filter_layer).init();
             },
             (TracingFormat::Json, TracingTimer::Default) => {
                 let sub_builder = tracing_subscriber::FmtSubscriber::builder();
-                let subscriber = sub_builder.json().flatten_event(true).with_writer(non_blocking).finish();
+                let subscriber = sub_builder.with_ansi(false).json().flatten_event(true).with_writer(non_blocking).finish();
 
                 subscriber.with(filter_layer).init();
             },
@@ -132,6 +132,7 @@ impl TracingSubscriber {
                 let sub_builder = tracing_subscriber::FmtSubscriber::builder();
                 let subscriber = sub_builder
                     .with_timer(local_timer)
+                    .with_ansi(false)
                     .json()
                     .flatten_event(true)
                     .with_writer(non_blocking)
@@ -210,9 +211,17 @@ impl tracing_subscriber::fmt::time::FormatTime for ChronoLocalTimer {
     }
 }
 
-pub fn init_tracing_default() -> Option<tracing_appender::non_blocking::WorkerGuard> {
+pub fn init_tracing_stdout() {
     let mut subscriber = TracingSubscriber::default();
     subscriber.with_timer(TracingTimer::Local);
 
-    subscriber.init()
+    subscriber.init();
+}
+
+pub fn init_with_persistence() -> tracing_appender::non_blocking::WorkerGuard {
+    let mut subscriber = TracingSubscriber::default();
+    subscriber.with_timer(TracingTimer::Local);
+    subscriber.with_file_persistence(TracingFilePersistence::Enabled(TracingFilePersistenceConfig::default()));
+
+    subscriber.init().expect("Tracing with file persistence should return a guard.")
 }
