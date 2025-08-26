@@ -13,33 +13,30 @@ pub struct TracingSubscriber {
 }
 
 impl TracingSubscriber {
-    pub fn with_filter_level(mut self, level: TracingFilterLevel) -> Self {
+    pub fn with_filter_level(&mut self, level: TracingFilterLevel) {
         self.filter_level = Some(level);
-        self
     }
 
-    pub fn with_format(mut self, format: TracingFormat) -> Self {
+    pub fn with_format(&mut self, format: TracingFormat) {
         self.format = Some(format);
-        self
     }
 
-    pub fn with_timer(mut self, timer: TracingTimer) -> Self {
+    pub fn with_timer(&mut self, timer: TracingTimer) {
         self.timer = Some(timer);
-        self
     }
 
-    pub fn with_file_persistence(mut self, persistence: TracingFilePersistence) -> Self {
+    pub fn with_file_persistence(&mut self, persistence: TracingFilePersistence) {
         self.file_persistence = Some(persistence);
-        self
     }
 
-    pub fn init(mut self) {
+    pub fn init(mut self) -> Option<tracing_appender::non_blocking::WorkerGuard> {
         let file_persistence = self.file_persistence.take();
 
         if let Some(TracingFilePersistence::Enabled(config)) = file_persistence {
-            self.init_with_persistence(config);
+            Some(self.init_with_persistence(config))
         } else {
             self.init_with_stdout();
+            None
         }
     }
 
@@ -48,8 +45,7 @@ impl TracingSubscriber {
         let filter_level = self.filter_level.unwrap_or_default();
         let format = self.format.unwrap_or_default();
 
-        let sub_builder = tracing_subscriber::FmtSubscriber::builder();
-        let subscriber = sub_builder.finish();
+        let subscriber = tracing_subscriber::registry();
 
         let filter_layer_builder = tracing_subscriber::filter::EnvFilter::builder();
         let filter_level = match filter_level {
@@ -63,36 +59,28 @@ impl TracingSubscriber {
 
         match (format, timer) {
             (TracingFormat::Plain, TracingTimer::Default) => {
-                subscriber.with(filter_layer).with(tracing_subscriber::fmt::layer()).init();
+                subscriber.with(filter_layer).init();
             },
             (TracingFormat::Plain, TracingTimer::Local) => {
                 let local_timer = ChronoLocalTimer;
-                let timer_layer = tracing_subscriber::fmt::layer().with_timer(local_timer);
+                let fmt_layer = tracing_subscriber::fmt::layer().with_timer(local_timer);
 
-                subscriber.with(filter_layer).with(tracing_subscriber::fmt::layer()).with(timer_layer).init();
+                subscriber.with(filter_layer).with(fmt_layer).init();
             },
             (TracingFormat::Json, TracingTimer::Default) => {
-                subscriber
-                    .with(filter_layer)
-                    .with(tracing_subscriber::fmt::layer().json().flatten_event(true))
-                    .init();
+                let fmt_layer = tracing_subscriber::fmt::layer().json().flatten_event(true);
+                subscriber.with(filter_layer).with(fmt_layer).init();
             },
             (TracingFormat::Json, TracingTimer::Local) => {
                 let local_timer = ChronoLocalTimer;
-                let timer_layer = tracing_subscriber::fmt::layer().with_timer(local_timer);
+                let fmt_layer = tracing_subscriber::fmt::layer().with_timer(local_timer).json().flatten_event(true);
 
-                subscriber
-                    .with(filter_layer)
-                    .with(tracing_subscriber::fmt::layer().json().flatten_event(true))
-                    .with(timer_layer)
-                    .init();
+                subscriber.with(filter_layer).with(fmt_layer).init();
             },
         };
     }
 
-    fn init_with_persistence(self, config: TracingFilePersistenceConfig) {
-        let sub_builder = tracing_subscriber::FmtSubscriber::builder();
-
+    fn init_with_persistence(self, config: TracingFilePersistenceConfig) -> tracing_appender::non_blocking::WorkerGuard {
         let log_dir = config.log_dir;
         let log_prefix = config.log_prefix;
         let file_appender = match config.rotation {
@@ -101,9 +89,7 @@ impl TracingSubscriber {
             TracingFileRotation::Minutely => tracing_appender::rolling::minutely(log_dir, log_prefix),
             TracingFileRotation::Never => tracing_appender::rolling::never(log_dir, log_prefix),
         };
-        let (non_blocking, _guard) = tracing_appender::non_blocking(file_appender);
-
-        let subscriber = sub_builder.with_writer(non_blocking).finish();
+        let (non_blocking, guard) = tracing_appender::non_blocking(file_appender);
 
         let timer = self.timer.unwrap_or_default();
         let filter_level = self.filter_level.unwrap_or_default();
@@ -121,31 +107,41 @@ impl TracingSubscriber {
 
         match (format, timer) {
             (TracingFormat::Plain, TracingTimer::Default) => {
-                subscriber.with(filter_layer).with(tracing_subscriber::fmt::layer()).init();
+                let sub_builder = tracing_subscriber::FmtSubscriber::builder();
+                let subscriber = sub_builder.with_writer(non_blocking).finish();
+
+                subscriber.with(filter_layer).init();
             },
             (TracingFormat::Plain, TracingTimer::Local) => {
                 let local_timer = ChronoLocalTimer;
-                let timer_layer = tracing_subscriber::fmt::layer().with_timer(local_timer);
 
-                subscriber.with(filter_layer).with(tracing_subscriber::fmt::layer()).with(timer_layer).init();
+                let sub_builder = tracing_subscriber::FmtSubscriber::builder();
+                let subscriber = sub_builder.with_timer(local_timer).with_writer(non_blocking).finish();
+
+                subscriber.with(filter_layer).init();
             },
             (TracingFormat::Json, TracingTimer::Default) => {
-                subscriber
-                    .with(filter_layer)
-                    .with(tracing_subscriber::fmt::layer().json().flatten_event(true))
-                    .init();
+                let sub_builder = tracing_subscriber::FmtSubscriber::builder();
+                let subscriber = sub_builder.json().flatten_event(true).with_writer(non_blocking).finish();
+
+                subscriber.with(filter_layer).init();
             },
             (TracingFormat::Json, TracingTimer::Local) => {
                 let local_timer = ChronoLocalTimer;
-                let timer_layer = tracing_subscriber::fmt::layer().with_timer(local_timer);
 
-                subscriber
-                    .with(filter_layer)
-                    .with(tracing_subscriber::fmt::layer().json().flatten_event(true))
-                    .with(timer_layer)
-                    .init();
+                let sub_builder = tracing_subscriber::FmtSubscriber::builder();
+                let subscriber = sub_builder
+                    .with_timer(local_timer)
+                    .json()
+                    .flatten_event(true)
+                    .with_writer(non_blocking)
+                    .finish();
+
+                subscriber.with(filter_layer).init();
             },
         };
+
+        guard
     }
 }
 
@@ -210,6 +206,13 @@ struct ChronoLocalTimer;
 
 impl tracing_subscriber::fmt::time::FormatTime for ChronoLocalTimer {
     fn format_time(&self, w: &mut tracing_subscriber::fmt::format::Writer<'_>) -> std::fmt::Result {
-        write!(w, "{}", chrono::Local::now().format("%Y-%m-%dT%H:%M:%S%.f%:z"))
+        write!(w, "{}", chrono::Local::now().format("%Y-%m-%dT%H:%M:%S%.9f %:z"))
     }
+}
+
+pub fn init_tracing_default() -> Option<tracing_appender::non_blocking::WorkerGuard> {
+    let mut subscriber = TracingSubscriber::default();
+    subscriber.with_timer(TracingTimer::Local);
+
+    subscriber.init()
 }
