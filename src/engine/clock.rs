@@ -1,5 +1,9 @@
 use chrono::{DateTime, Utc};
 
+pub trait EngineClock {
+    fn time(&self) -> DateTime<Utc>;
+}
+
 #[derive(Debug)]
 pub struct SimulatedClock {
     inner: std::sync::Arc<parking_lot::RwLock<SimulatedClockInner>>,

@@ -7,11 +7,11 @@ pub struct RoutingKey<K, V> {
 }
 
 #[derive(Debug)]
-pub struct RoutingTable<F, E, A, I> {
-    fronts: Vec<RoutingKey<FrontIndex, F>>,
-    exchanges: Vec<RoutingKey<ExchangeIndex, E>>,
-    assets: Vec<RoutingKey<AssetIndex, A>>,
-    instruments: Vec<RoutingKey<InstrumentIndex, I>>,
+pub struct RoutingTable<Front, Exchange, Asset, Instrument> {
+    fronts: Vec<RoutingKey<FrontIndex, Front>>,
+    exchanges: Vec<RoutingKey<ExchangeIndex, Exchange>>,
+    assets: Vec<RoutingKey<AssetIndex, Asset>>,
+    instruments: Vec<RoutingKey<InstrumentIndex, Instrument>>,
 }
 
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Constructor)]
