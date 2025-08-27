@@ -20,7 +20,9 @@ smol_str = "0.3"
 # Async
 tokio = { version = "1.47", default-features = false, features = [
     "rt-multi-thread",
+    "time",
 ] }
+tokio-stream = "0.1"
 futures = "0.3"
 
 # Tracing
