@@ -1,5 +1,6 @@
 use chrono::{DateTime, Utc};
 
+mod audit;
 mod clock;
 mod exec;
 mod risk;
