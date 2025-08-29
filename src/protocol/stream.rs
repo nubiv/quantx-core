@@ -1,5 +1,10 @@
+use std::{collections::VecDeque, marker::PhantomData};
+
 use futures::{Stream, StreamExt};
+use pin_project::pin_project;
 use tracing::{error, info, warn};
+
+use crate::protocol::{parser::ProtocolParser, transformer::Transformer};
 
 pub trait RecoverableStream
 where
@@ -164,4 +169,19 @@ impl ReconnectionState {
 
         tokio::time::sleep(sleep_duration)
     }
+}
+
+#[derive(Debug)]
+#[pin_project]
+pub struct ExchangeStream<Protocol, InnerSt, StTransformer>
+where
+    Protocol: ProtocolParser,
+    InnerSt: Stream,
+    StTransformer: Transformer,
+{
+    #[pin]
+    pub stream: InnerSt,
+    pub transformer: StTransformer,
+    pub buffer: VecDeque<Result<StTransformer::Output, StTransformer::Error>>,
+    pub protocol_marker: PhantomData<Protocol>,
 }
