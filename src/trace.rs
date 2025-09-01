@@ -218,7 +218,7 @@ pub fn init_tracing_stdout() {
     subscriber.init();
 }
 
-pub fn init_with_persistence() -> tracing_appender::non_blocking::WorkerGuard {
+pub fn init_tracing_file_persistence() -> tracing_appender::non_blocking::WorkerGuard {
     let mut subscriber = TracingSubscriber::default();
     subscriber.with_timer(TracingTimer::Local);
     subscriber.with_file_persistence(TracingFilePersistence::Enabled(TracingFilePersistenceConfig::default()));
