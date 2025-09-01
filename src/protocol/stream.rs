@@ -11,7 +11,7 @@ use tracing::{error, info, warn};
 
 use crate::protocol::{
     parser::{ProtocolParser, WebsocketParser},
-    transformer::{Transformer, TransformerBatch, TransformerSingle},
+    transformer::Transformer,
 };
 
 pub trait RecoverableStream
@@ -190,63 +190,18 @@ where
     #[pin]
     pub stream: StreamRaw,
     pub transformer: StTransformer,
-    pub buffer: VecDeque<Result<StTransformer::OutputItem, StTransformer::Error>>,
+    pub buffer: VecDeque<Result<StTransformer::Output, StTransformer::Error>>,
     pub protocol_marker: PhantomData<Protocol>,
 }
-
-// impl<Protocol, StreamRaw, StreamTransformer> Stream for ExchangeStream<Protocol, StreamRaw, StreamTransformer>
-// where
-//     Protocol: WebsocketParser,
-//     StreamRaw: Stream<Item = Result<Protocol::Message, Protocol::Error>> + Unpin,
-//     StreamTransformer: TransformerSingle,
-//     StreamTransformer::Error: From<Box<dyn std::error::Error>>,
-// {
-//     type Item = Result<StreamTransformer::OutputItem, StreamTransformer::Error>;
-
-//     fn poll_next(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Option<Self::Item>> {
-//         loop {
-//             // Flush Self::Item buffer if it is not currently empty
-//             if let Some(output) = self.buffer.pop_front() {
-//                 return Poll::Ready(Some(output));
-//             }
-
-//             // Poll inner `Stream` for next the next input protocol message
-//             let input = match self.as_mut().project().stream.poll_next(cx) {
-//                 Poll::Ready(Some(input)) => input,
-//                 Poll::Ready(None) => return Poll::Ready(None),
-//                 Poll::Pending => return Poll::Pending,
-//             };
-
-//             // Parse input protocol message into `ExchangeMessage`
-//             let exchange_message = match Protocol::parse::<StreamTransformer::Input>(input) {
-//                 // `StreamParser` successfully deserialised `ExchangeMessage`
-//                 Some(Ok(exchange_message)) => exchange_message,
-
-//                 // If `StreamParser` returns an Err pass it downstream
-//                 Some(Err(err)) => return Poll::Ready(Some(Err(err.into()))),
-
-//                 // If `StreamParser` returns None it's a safe-to-skip message
-//                 None => continue,
-//             };
-
-//             // Transform `ExchangeMessage` into `Transformer::OutputIter`
-//             // ie/ IntoIterator<Item = Result<Output, SocketError>>
-//             self.transformer
-//                 .transform_one(exchange_message)
-//                 .into_iter()
-//                 .for_each(|output_result: StreamTransformer::OutputItem| self.buffer.push_back(output_result));
-//         }
-//     }
-// }
 
 impl<Protocol, StreamRaw, StreamTransformer> Stream for ExchangeStream<Protocol, StreamRaw, StreamTransformer>
 where
     Protocol: WebsocketParser,
     StreamRaw: Stream<Item = Result<Protocol::Message, Protocol::Error>> + Unpin,
-    StreamTransformer: TransformerBatch,
+    StreamTransformer: Transformer,
     StreamTransformer::Error: From<Box<dyn std::error::Error>>,
 {
-    type Item = Result<StreamTransformer::OutputItem, StreamTransformer::Error>;
+    type Item = Result<StreamTransformer::Output, StreamTransformer::Error>;
 
     fn poll_next(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Option<Self::Item>> {
         loop {
@@ -277,9 +232,9 @@ where
             // Transform `ExchangeMessage` into `Transformer::OutputIter`
             // ie/ IntoIterator<Item = Result<Output, SocketError>>
             self.transformer
-                .transform_many(exchange_message)
+                .transform(exchange_message)
                 .into_iter()
-                .for_each(|output_result: Result<StreamTransformer::OutputItem, StreamTransformer::Error>| self.buffer.push_back(output_result));
+                .for_each(|output_result: Result<StreamTransformer::Output, StreamTransformer::Error>| self.buffer.push_back(output_result));
 
             // if let Some(output) = self.buffer.pop_front() {
             //     return Poll::Ready(Some(output));
