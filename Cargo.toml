@@ -52,6 +52,7 @@ barter-data = "0.10"
 barter-integration = "0.9"
 barter-instrument = "0.3"
 barter-execution = "0.6"
+tokio-tungstenite = "0.27.0"
 
 [features]
 default = []

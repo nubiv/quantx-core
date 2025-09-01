@@ -14,6 +14,9 @@ use crate::protocol::{
     transformer::Transformer,
 };
 
+pub type BarterExchangeStream<Protocol, InnerStream, StreamTransformer> = barter_integration::stream::ExchangeStream<Protocol, InnerStream, StreamTransformer>;
+pub type BarterIndexedStream<Indexer, Stream> = barter_integration::stream::indexed::IndexedStream<Indexer, Stream>;
+
 pub trait RecoverableStream
 where
     Self: Sized,
