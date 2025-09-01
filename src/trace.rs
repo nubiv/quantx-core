@@ -4,7 +4,7 @@ use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 const DEFAULT_LOG_DIR: &str = "logs";
 const DEFAULT_LOG_PREFIX: &str = "log";
 
-#[derive(Debug, Default, Constructor)]
+#[derive(Default, Constructor)]
 pub struct TracingSubscriber {
     filter_level: Option<TracingFilterLevel>,
     format: Option<TracingFormat>,
