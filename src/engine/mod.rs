@@ -23,3 +23,5 @@ pub struct EngineMeta {
     seq: usize,
     time_init: DateTime<Utc>,
 }
+
+pub type BarterEngine<Clock, State, Execution, Risk, Strategy> = barter::engine::Engine<Clock, State, Execution, Risk, Strategy>;
