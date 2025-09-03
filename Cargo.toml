@@ -13,7 +13,7 @@ rust_decimal = "1.37"
 rust_decimal_macros = "1.37"
 kanal = "0.1"
 parking_lot = "0.12"
-indexmap = "2.10"
+indexmap = "2.11"
 fnv = "1.0"
 smol_str = "0.3"
 
@@ -22,9 +22,13 @@ tokio = { version = "1.47", default-features = false, features = [
     "rt-multi-thread",
     "time",
 ] }
+tokio-tungstenite = "0.27"
 tokio-stream = "0.1"
 futures = "0.3"
 pin-project = "1.1.10"
+
+# eBPF
+aya = "0.13"
 
 # Tracing
 tracing = "0.1"
@@ -52,10 +56,13 @@ barter-data = "0.10"
 barter-integration = "0.9"
 barter-instrument = "0.3"
 barter-execution = "0.6"
-tokio-tungstenite = "0.27.0"
+
+[target.'cfg(target_os = "linux")'.dependencies]
+libbpf-rs = "0.25"
+libbpf-cargo = "0.25"
 
 [dev-dependencies]
-criterion = "0.6"
+criterion = "0.7"
 crossbeam-channel = "0.5.15"
 
 [features]
