@@ -81,21 +81,6 @@ macro_rules! run_bench_barter {
     };
 }
 
-// fn mpmc(c: &mut Criterion) {
-//     let mut g = c.benchmark_group("sync::mpmc");
-
-//     g.throughput(Throughput::Elements(BENCH_MSG_COUNT as u64));
-//     g.sample_size(10).warm_up_time(Duration::from_secs(1));
-
-//     g.bench_function("bn", |b| {
-//         let (tx, rx) = kanal::unbounded();
-//         let core_count = usize::from(available_parallelism().unwrap());
-//         run_bench_kanal!(b, tx, rx, core_count, core_count);
-//     });
-
-//     g.finish();
-// }
-
 fn mpsc(c: &mut Criterion) {
     let mut g = c.benchmark_group("sync::mpsc");
 
@@ -103,7 +88,6 @@ fn mpsc(c: &mut Criterion) {
     g.sample_size(10).warm_up_time(Duration::from_secs(1));
 
     g.bench_function("bn_kanal", |b| {
-        // let (tx, rx) = kanal::unbounded();
         let core_count = usize::from(available_parallelism().unwrap());
         run_bench_kanal!(b, core_count, 1);
     });
@@ -122,7 +106,6 @@ fn spsc(c: &mut Criterion) {
     g.sample_size(10).warm_up_time(Duration::from_secs(1));
 
     g.bench_function("bn_kanal", |b| {
-        // let (tx, rx) = kanal::unbounded::<usize>();
         run_bench_kanal!(b, 1, 1);
     });
     g.bench_function("bn_barter", |b| {
