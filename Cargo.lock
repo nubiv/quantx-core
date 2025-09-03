@@ -2089,6 +2089,7 @@ dependencies = [
  "charming",
  "chrono",
  "criterion",
+ "crossbeam-channel",
  "derive_more",
  "fnv",
  "futures",
