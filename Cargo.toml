@@ -54,5 +54,16 @@ barter-instrument = "0.3"
 barter-execution = "0.6"
 tokio-tungstenite = "0.27.0"
 
+[dev-dependencies]
+criterion = "0.6"
+
 [features]
 default = []
+
+[[bench]]
+name = "channel_sync"
+harness = false
+
+[[bench]]
+name = "channel_async"
+harness = false
