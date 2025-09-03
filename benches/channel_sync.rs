@@ -106,8 +106,8 @@ macro_rules! run_bench {
                 }));
             }
 
-            for h in handles {
-                h.join().unwrap();
+            for handle in handles {
+                handle.join().unwrap();
             }
         })
     }};
