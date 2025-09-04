@@ -2,7 +2,6 @@ mod utils;
 
 use std::{hint::black_box, thread::available_parallelism, time::Duration};
 
-use barter_integration::channel::Tx;
 use criterion::*;
 use utils::{BENCH_MSG_COUNT, evenly_distribute};
 
@@ -11,17 +10,14 @@ macro_rules! bench_all_mpsc {
         $g.bench_function("bn_kanal", |b| {
             run_bench_kanal!(b, $writers, $t, $gen, $check);
         });
-        // $g.bench_function("bn_crossbeam", |b| {
-        //     run_bench_crossbeam!(b, $writers, $t, $gen, $check);
-        // });
-        // $g.bench_function("bn_barter", |b| {
-        //     run_bench_barter!(b, $writers, $t, $gen, $check);
-        // });
+        $g.bench_function("bn_barter", |b| {
+            run_bench_barter!(b, $writers, $t, $gen, $check);
+        });
     }};
 }
 
 
-async fn kanal_recv_one<T>(rx: &mut kanal::AsyncReceiver<T>) -> T {
+async fn kanal_recv_one<T>(rx: &kanal::AsyncReceiver<T>) -> T {
     rx.recv().await.unwrap()
 }
 async fn kanal_send_one<T>(tx: &kanal::AsyncSender<T>, v: T) {
@@ -33,8 +29,6 @@ macro_rules! run_bench_kanal {
             $b,
             $writers,
             || kanal::unbounded_async::<$t>(),
-            // |rx: &mut kanal::AsyncReceiver<$t>| kanal_recv_one(rx),
-            // |tx: &kanal::AsyncSender<$t>, v: $t| kanal_send_one(tx, v),
             kanal_recv_one::<$t>,
             kanal_send_one::<$t>,
             $gen_val,
@@ -43,28 +37,23 @@ macro_rules! run_bench_kanal {
     };
 }
 
-macro_rules! run_bench_crossbeam {
-    ($b:expr, $writers:expr, $t:ty, $gen_val:expr, $check_val:expr) => {
-        run_bench!(
-            $b,
-            $writers,
-            || crossbeam_channel::unbounded::<$t>(),
-            |rx: &mut crossbeam_channel::Receiver<$t>| rx.recv().unwrap(),
-            |tx: &crossbeam_channel::Sender<$t>, v: $t| { tx.send(v).unwrap(); },
-            $gen_val,
-            $check_val
-        )
-    };
+async fn barter_recv_one<T>(rx: &mut barter_integration::channel::UnboundedRx<T>) -> T {
+    tokio_stream::StreamExt::next(rx).await.unwrap()
 }
-
+async fn barter_send_one<T>(tx: &mut barter_integration::channel::UnboundedTx<T>, v: T)
+where 
+    T: Send + Clone + std::fmt::Debug
+{
+    futures::SinkExt::send(tx, v).await.unwrap();
+}
 macro_rules! run_bench_barter {
     ($b:expr, $writers:expr, $t:ty, $gen_val:expr, $check_val:expr) => {
         run_bench!(
             $b,
             $writers,
             || barter_integration::channel::mpsc_unbounded::<$t>(),
-            |rx: &mut barter_integration::channel::UnboundedRx<$t>| rx.next().unwrap(),
-            |tx: &barter_integration::channel::UnboundedTx<$t>, v: $t| { tx.send(v).unwrap(); },
+            barter_recv_one::<$t>,
+            barter_send_one::<$t>,
             $gen_val,
             $check_val
         )
@@ -81,9 +70,6 @@ macro_rules! run_bench {
         $gen_val:expr,             
         $check_val:expr            
     ) => {{
-        use futures::FutureExt;
-        use futures::future;
-        use tokio::task::JoinHandle;
         let rt = tokio::runtime::Builder::new_multi_thread()
             .worker_threads(usize::from(available_parallelism().unwrap()))
             .enable_all()
@@ -111,12 +97,12 @@ macro_rules! run_bench {
             }
 
             for d in 0..$writers {
-                let tx = tx.clone();
+                let mut tx = tx.clone();
                 let iters = writers_dist[d];
                 handles.push(rt.spawn(async move {
                     for i in 0..iters {
                         let v = $gen_val(i + 1);
-                        $send_one_async(&tx, v).await;
+                        $send_one_async(&mut tx, v).await;
                     }
                 }));
             }
