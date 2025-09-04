@@ -41,6 +41,9 @@ simdutf8 = "0.1"
 # Error
 thiserror = "2.0"
 
+# Python Integration
+pyo3 = { version = "0.26", features = ["extension-module"] }
+
 # Misc
 chrono = { version = "0.4", features = ["serde"] }
 rand = "0.9"

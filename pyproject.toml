@@ -1,0 +1,17 @@
+[project]
+name = "quantx"
+version = "0.1.0"
+description = "quantx"
+authors = [{ name = "nubiv", email = "h.horace0921@gmail.com" }]
+dependencies = []
+readme = "README.md"
+requires-python = ">= 3.12"
+
+[build-system]
+requires = ["maturin>=1.0,<2.0"]
+build-backend = "maturin"
+
+[tool.maturin]
+features = ["pyo3/extension-module"]
+module-name = "quantx"
+# python-source = "./pyo3"
