@@ -1,11 +1,11 @@
 default:
   @just --list
 
-activate:
-  source ./venv/bin/activate
-
 py-test:
-  python pyo3/test.py
+  python bindings/python
+
+py-dev:
+  maturin develop --uv --manifest-path bindings/Cargo.toml
 
 test:
   @echo 'Testing!'

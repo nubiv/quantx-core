@@ -2419,6 +2419,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "quantx-bindings"
+version = "0.1.0"
+dependencies = [
+ "pyo3",
+ "quantx-core",
+]
+
+[[package]]
 name = "quantx-core"
 version = "0.1.0"
 dependencies = [

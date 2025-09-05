@@ -7,6 +7,10 @@ repository = "https://github.com/nubiv/quantx-core"
 version = "0.1.0"
 edition = "2024"
 
+[workspace]
+members = [".", "bindings"]
+resolver = "2"
+
 [dependencies]
 # Data Struct
 rust_decimal = "1.37"

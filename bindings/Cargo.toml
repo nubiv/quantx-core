@@ -1,0 +1,18 @@
+[package]
+name = "quantx-bindings"
+authors = ["nubiv <h.horace0921@gmail.com>"]
+license = "MIT"
+description = "quantx-bindings"
+repository = "https://github.com/nubiv/quantx-core"
+version = "0.1.0"
+edition = "2024"
+
+[lib]
+name = "quantx"
+crate-type = ["cdylib"]
+path = "./rust/lib.rs"
+
+[dependencies]
+quantx-core = { path = "../" }
+
+pyo3 = { version = "0.26", features = ["extension-module"] }
