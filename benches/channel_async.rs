@@ -3,6 +3,7 @@ mod utils;
 use std::{hint::black_box, thread::available_parallelism, time::Duration};
 
 use criterion::*;
+use quantx_core::channel::{AsyncRx, AsyncTx};
 use utils::{BENCH_MSG_COUNT, evenly_distribute};
 
 macro_rules! bench_all_mpsc {
@@ -12,6 +13,9 @@ macro_rules! bench_all_mpsc {
         });
         $g.bench_function("bn_barter", |b| {
             run_bench_barter!(b, $writers, $t, $gen, $check);
+        });
+        $g.bench_function("bn_custom", |b| {
+            run_bench_custom!(b, $writers, $t, $gen, $check);
         });
     }};
 }
@@ -54,6 +58,29 @@ macro_rules! run_bench_barter {
             || barter_integration::channel::mpsc_unbounded::<$t>(),
             barter_recv_one::<$t>,
             barter_send_one::<$t>,
+            $gen_val,
+            $check_val
+        )
+    };
+}
+
+async fn custom_recv_one<T>(rx: &mut quantx_core::channel::UnboundedRx<quantx_core::channel::AsyncChannel, T>) -> T {
+    rx.recv().await.unwrap()
+}
+async fn custom_send_one<T>(tx: &mut quantx_core::channel::UnboundedTx<quantx_core::channel::AsyncChannel, T>, v: T)
+where 
+    T: Send + Clone + std::fmt::Debug
+{
+    tx.send(v).await.unwrap();
+}
+macro_rules! run_bench_custom {
+    ($b:expr, $writers:expr, $t:ty, $gen_val:expr, $check_val:expr) => {
+        run_bench!(
+            $b,
+            $writers,
+            || quantx_core::channel::mpsc_unbounded::<quantx_core::channel::AsyncChannel, $t>(),
+            custom_recv_one::<$t>,
+            custom_send_one::<$t>,
             $gen_val,
             $check_val
         )

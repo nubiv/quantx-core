@@ -1,6 +1,6 @@
 pub mod trace;
 
-mod channel;
+pub mod channel;
 mod engine;
 mod exchange;
 mod execution;

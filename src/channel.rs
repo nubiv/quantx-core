@@ -1,6 +1,8 @@
 use std::fmt::Debug;
 
+#[derive(Debug, Clone)]
 pub struct SyncChannel;
+#[derive(Debug, Clone)]
 pub struct AsyncChannel;
 
 pub trait ChannelKind {
@@ -28,6 +30,22 @@ impl ChannelKind for AsyncChannel {
     }
 }
 
+pub trait SyncTx<T> {
+    type SendError: Debug;
+
+    fn send(&self, item: T) -> Result<(), Self::SendError>;
+}
+
+pub trait AsyncTx<T> {
+    type SendError: Debug;
+    type SendFuture<'a>: Future<Output = Result<(), Self::SendError>> + 'a
+    where
+        Self: 'a,
+        T: 'a;
+
+    fn send(&self, item: T) -> Self::SendFuture<'_>;
+}
+
 #[derive(Debug, Clone)]
 pub struct UnboundedTx<K, T>
 where
@@ -37,6 +55,48 @@ where
     pub tx: <K as ChannelKind>::Sender<T>,
 }
 
+impl<T> SyncTx<T> for UnboundedTx<SyncChannel, T>
+where
+    <SyncChannel as ChannelKind>::Sender<T>: Debug + Clone,
+{
+    type SendError = kanal::SendError;
+
+    fn send(&self, item: T) -> Result<(), Self::SendError> {
+        self.tx.send(item)
+    }
+}
+
+impl<T> AsyncTx<T> for UnboundedTx<AsyncChannel, T>
+where
+    <AsyncChannel as ChannelKind>::Sender<T>: Debug + Clone,
+{
+    type SendError = kanal::SendError;
+    type SendFuture<'a>
+        = kanal::SendFuture<'a, T>
+    where
+        T: 'a;
+
+    fn send(&self, item: T) -> Self::SendFuture<'_> {
+        self.tx.send(item)
+    }
+}
+
+pub trait SyncRx<T> {
+    type ReceiveError: Debug;
+
+    fn recv(&mut self) -> Result<T, Self::ReceiveError>;
+}
+
+pub trait AsyncRx<T> {
+    type ReceiveError: Debug;
+    type ReceiveFuture<'a>: Future<Output = Result<T, Self::ReceiveError>> + 'a
+    where
+        Self: 'a,
+        T: 'a;
+
+    fn recv(&mut self) -> Self::ReceiveFuture<'_>;
+}
+
 #[derive(Debug)]
 pub struct UnboundedRx<K, T>
 where
@@ -44,6 +104,32 @@ where
     <K as ChannelKind>::Receiver<T>: Debug,
 {
     pub rx: <K as ChannelKind>::Receiver<T>,
+}
+
+impl<T> SyncRx<T> for UnboundedRx<SyncChannel, T>
+where
+    <SyncChannel as ChannelKind>::Receiver<T>: Debug,
+{
+    type ReceiveError = kanal::ReceiveError;
+
+    fn recv(&mut self) -> Result<T, Self::ReceiveError> {
+        self.rx.recv()
+    }
+}
+
+impl<T> AsyncRx<T> for UnboundedRx<AsyncChannel, T>
+where
+    <AsyncChannel as ChannelKind>::Receiver<T>: Debug,
+{
+    type ReceiveError = kanal::ReceiveError;
+    type ReceiveFuture<'a>
+        = kanal::ReceiveFuture<'a, T>
+    where
+        T: 'a;
+
+    fn recv(&mut self) -> Self::ReceiveFuture<'_> {
+        self.rx.recv()
+    }
 }
 
 pub fn mpsc_unbounded<K, T>() -> (UnboundedTx<K, T>, UnboundedRx<K, T>)
@@ -56,79 +142,3 @@ where
 
     (UnboundedTx { tx }, UnboundedRx { rx })
 }
-
-// pub fn mpsc_unbounded<T>() -> (UnboundedTx<T>, UnboundedRx<T>) {
-//     let (tx, rx) = kanal::unbounded::<T>();
-
-//     (UnboundedTx::new(tx), UnboundedRx::new(rx))
-// }
-
-// #[derive(Debug, Clone, Constructor)]
-// pub struct UnboundedTx<T> {
-//     pub tx: kanal::Sender<T>,
-// }
-
-// #[derive(Debug, Constructor)]
-// pub struct UnboundedRx<T> {
-//     pub rx: kanal::Receiver<T>,
-// }
-
-// #[derive(Debug)]
-// pub struct Channel<T> {
-//     pub tx: kanal::Sender<T>,
-//     pub rx: kanal::Receiver<T>,
-// }
-
-// impl<T> Channel<T> {
-//     pub fn new() -> Self {
-//         let (tx, rx) = kanal::unbounded();
-//         Self { tx, rx }
-//     }
-// }
-
-// impl<T> Default for Channel<T> {
-//     fn default() -> Self {
-//         Self::new()
-//     }
-// }
-
-// pub trait Unrecoverable {
-//     fn is_unrecoverable(&self) -> bool;
-// }
-
-// pub trait Tx
-// where
-//     Self: Debug + Clone + Send,
-// {
-//     type Item;
-//     type Error: Unrecoverable + Debug;
-//     fn send<Item: Into<Self::Item>>(&self, item: Item) -> Result<(), Self::Error>;
-// }
-
-// #[derive(Debug, Clone)]
-// pub struct UnboundedTx<T> {
-//     pub tx: kanal::Sender<T>,
-// }
-
-// impl<T> Tx for UnboundedTx<T>
-// where
-//     T: Debug + Clone + Send,
-// {
-//     type Item = T;
-//     type Error = kanal::SendError;
-
-//     fn send<Item: Into<Self::Item>>(&self, item: Item) -> Result<(), Self::Error> {
-//         self.tx.send(item.into())
-//     }
-// }
-
-// impl Unrecoverable for kanal::SendError {
-//     fn is_unrecoverable(&self) -> bool {
-//         true
-//     }
-// }
-
-// #[derive(Debug, Constructor)]
-// pub struct UnboundedRx<T> {
-//     pub rx: kanal::Receiver<T>,
-// }
