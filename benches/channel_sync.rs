@@ -18,8 +18,8 @@ macro_rules! bench_all_mpsc {
         $g.bench_function("bn_barter", |b| {
             run_bench_barter!(b, $writers, $t, $gen, $check);
         });
-        $g.bench_function("bn_custom", |b| {
-            run_bench_custom!(b, $writers, $t, $gen, $check);
+        $g.bench_function("bn_custom_kanal", |b| {
+            run_bench_custom_kanal!(b, $writers, $t, $gen, $check);
         });
     }};
 }
@@ -67,14 +67,14 @@ macro_rules! run_bench_barter {
     };
 }
 
-macro_rules! run_bench_custom {
+macro_rules! run_bench_custom_kanal {
     ($b:expr, $writers:expr, $t:ty, $gen_val:expr, $check_val:expr) => {
         run_bench!(
             $b,
             $writers,
-            || quantx_core::channel::mpsc_unbounded::<quantx_core::channel::SyncChannel, $t>(),
-            |rx: &mut quantx_core::channel::UnboundedRx<quantx_core::channel::SyncChannel, $t>| rx.recv().unwrap(),
-            |tx: &quantx_core::channel::UnboundedTx<quantx_core::channel::SyncChannel, $t>, v: $t| { tx.send(v).unwrap(); },
+            || quantx_core::channel::mpsc_unbounded::<quantx_core::channel::KanalSyncChannel, $t>(),
+            |rx: &mut quantx_core::channel::UnboundedRx<quantx_core::channel::KanalSyncChannel, $t>| rx.recv().unwrap(),
+            |tx: &quantx_core::channel::UnboundedTx<quantx_core::channel::KanalSyncChannel, $t>, v: $t| { tx.send(v).unwrap(); },
             $gen_val,
             $check_val
         )
