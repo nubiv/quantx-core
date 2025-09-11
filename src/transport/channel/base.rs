@@ -4,10 +4,18 @@ use std::{fmt::Debug, marker::PhantomData};
 pub struct SyncChannel<K>(PhantomData<K>)
 where
     K: Debug + Clone;
+
 #[derive(Debug, Clone)]
 pub struct AsyncChannel<K>(PhantomData<K>)
 where
     K: Debug + Clone;
+
+pub trait ChannelBaseKind {
+    type Sender<T>;
+    type Receiver<T>;
+
+    fn unbounded<T>() -> (Self::Sender<T>, Self::Receiver<T>);
+}
 
 pub trait SyncChannelKind
 where
@@ -25,13 +33,6 @@ where
 {
     type Sender<T>: Debug + Clone;
     type Receiver<T>: Debug;
-
-    fn unbounded<T>() -> (Self::Sender<T>, Self::Receiver<T>);
-}
-
-pub trait ChannelBaseKind {
-    type Sender<T>;
-    type Receiver<T>;
 
     fn unbounded<T>() -> (Self::Sender<T>, Self::Receiver<T>);
 }
