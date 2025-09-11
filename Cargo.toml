@@ -15,7 +15,6 @@ resolver = "2"
 # Data Struct
 rust_decimal = "1.37"
 rust_decimal_macros = "1.37"
-kanal = "0.1"
 parking_lot = "0.12"
 indexmap = "2.11"
 fnv = "1.0"
@@ -30,6 +29,11 @@ tokio-tungstenite = "0.27"
 tokio-stream = "0.1"
 futures = "0.3"
 pin-project = "1.1.10"
+
+# Transport
+kanal = "0.1"
+iceoryx2 = { version = "0.6" }
+crossbeam-channel = "0.5"
 
 # Tracing
 tracing = "0.1"
@@ -70,7 +74,6 @@ aya = "0.13"
 
 [dev-dependencies]
 criterion = "0.7"
-crossbeam-channel = "0.5.15"
 
 [features]
 default = []
