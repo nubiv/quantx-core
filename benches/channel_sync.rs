@@ -2,7 +2,7 @@ mod utils;
 
 use std::{hint::black_box, thread::available_parallelism, time::Duration};
 
-use quantx_core::channel::{SyncTx, SyncRx};
+use quantx_core::transport::channel::{SyncTx, SyncRx};
 use barter_integration::channel::Tx;
 use criterion::*;
 use utils::{BENCH_MSG_COUNT, evenly_distribute};
@@ -72,9 +72,9 @@ macro_rules! run_bench_custom_kanal {
         run_bench!(
             $b,
             $writers,
-            || quantx_core::channel::mpsc_unbounded::<quantx_core::channel::KanalSyncChannel, $t>(),
-            |rx: &mut quantx_core::channel::UnboundedRx<quantx_core::channel::KanalSyncChannel, $t>| rx.recv().unwrap(),
-            |tx: &quantx_core::channel::UnboundedTx<quantx_core::channel::KanalSyncChannel, $t>, v: $t| { tx.send(v).unwrap(); },
+            || quantx_core::transport::channel::mpsc_unbounded::<quantx_core::transport::channel::KanalSyncChannel, $t>(),
+            |rx: &mut quantx_core::transport::channel::UnboundedRx<quantx_core::transport::channel::KanalSyncChannel, $t>| rx.recv().unwrap(),
+            |tx: &quantx_core::transport::channel::UnboundedTx<quantx_core::transport::channel::KanalSyncChannel, $t>, v: $t| { tx.send(v).unwrap(); },
             $gen_val,
             $check_val
         )

@@ -3,7 +3,7 @@ mod utils;
 use std::{hint::black_box, thread::available_parallelism, time::Duration};
 
 use criterion::*;
-use quantx_core::channel::{AsyncRx, AsyncTx, UnboundedRx, UnboundedTx};
+use quantx_core::transport::channel::{AsyncRx, AsyncTx, UnboundedRx, UnboundedTx};
 use utils::{BENCH_MSG_COUNT, evenly_distribute};
 
 macro_rules! bench_all_mpsc {
@@ -64,10 +64,10 @@ macro_rules! run_bench_barter {
     };
 }
 
-async fn custom_kanal_recv_one<T>(rx: &mut UnboundedRx<quantx_core::channel::KanalAsyncChannel, T>) -> T {
+async fn custom_kanal_recv_one<T>(rx: &mut UnboundedRx<quantx_core::transport::channel::KanalAsyncChannel, T>) -> T {
     rx.recv().await.unwrap()
 }
-async fn custom_kanal_send_one<T>(tx: &mut UnboundedTx<quantx_core::channel::KanalAsyncChannel, T>, v: T)
+async fn custom_kanal_send_one<T>(tx: &mut UnboundedTx<quantx_core::transport::channel::KanalAsyncChannel, T>, v: T)
 where 
     T: Send + Clone + std::fmt::Debug
 {
@@ -78,7 +78,7 @@ macro_rules! run_bench_custom_kanal {
         run_bench!(
             $b,
             $writers,
-            || quantx_core::channel::mpsc_unbounded::<quantx_core::channel::KanalAsyncChannel, $t>(),
+            || quantx_core::transport::channel::mpsc_unbounded::<quantx_core::transport::channel::KanalAsyncChannel, $t>(),
             custom_kanal_recv_one::<$t>,
             custom_kanal_send_one::<$t>,
             $gen_val,

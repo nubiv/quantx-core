@@ -1,4 +1,4 @@
-use crate::channel::base::{AsyncChannel, AsyncChannelKind, RecvAsyncLike, RecvSyncLike, SendAsyncLike, SendSyncLike, SyncChannel, SyncChannelKind};
+use super::base::{AsyncChannel, AsyncChannelKind, RecvAsyncLike, RecvSyncLike, SendAsyncLike, SendSyncLike, SyncChannel, SyncChannelKind};
 
 pub type KanalSyncChannel = SyncChannel<KanalSync>;
 pub type KanalAsyncChannel = AsyncChannel<KanalAsync>;
