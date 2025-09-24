@@ -16,6 +16,7 @@ resolver = "2"
 rust_decimal = "1.37"
 rust_decimal_macros = "1.37"
 parking_lot = "0.12"
+dashmap = "6.1"
 indexmap = "2.11"
 fnv = "1.0"
 smol_str = "0.3"
@@ -28,32 +29,44 @@ tokio = { version = "1.47", default-features = false, features = [
 tokio-tungstenite = "0.27"
 tokio-stream = "0.1"
 futures = "0.3"
-pin-project = "1.1.10"
+pin-project = "1.1"
 
 # Transport
 kanal = "0.1"
 iceoryx2 = { version = "0.6" }
 crossbeam-channel = "0.5"
+zenoh = "1.5"
 
 # Tracing
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
-tracing-appender = "0.2.3"
+tracing-appender = "0.2"
 
-# Serialization
+# Ser/Deser
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 simd-json = "0.15"
 simdutf8 = "0.1"
+bincode = "2.0"
 
 # Error
 thiserror = "2.0"
+
+# Storage/Cache
+sled = "0.34"
+fjall = "2.11"
+melange_db = "0.1"
+slab = "0.4"
+mini-moka = "0.10"
 
 # Python Integration
 pyo3 = { version = "0.26", features = ["extension-module"] }
 
 # Misc
 chrono = { version = "0.4", features = ["serde"] }
+encoding_rs = "0.8"
+uuid = "1.18"
+tabled = "0.20"
 rand = "0.9"
 charming = { version = "0.6", features = ["ssr"] }
 toml = "0.9"
@@ -74,6 +87,8 @@ aya = "0.13"
 
 [dev-dependencies]
 criterion = "0.7"
+pprof = "0.15"
+rexpect = "0.6.2"
 
 [features]
 default = []
