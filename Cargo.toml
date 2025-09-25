@@ -33,7 +33,8 @@ pin-project = "1.1"
 
 # Transport
 kanal = "0.1"
-iceoryx2 = { version = "0.6" }
+iceoryx2 = { version = "0.7", features = ["logger_tracing"] }
+iceoryx2-bb-container = "0.7"
 crossbeam-channel = "0.5"
 zenoh = "1.5"
 
@@ -99,4 +100,8 @@ harness = false
 
 [[bench]]
 name = "channel_async"
+harness = false
+
+[[bench]]
+name = "ipc"
 harness = false
