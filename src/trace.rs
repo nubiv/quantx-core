@@ -218,6 +218,14 @@ pub fn init_tracing_stdout() {
     subscriber.init();
 }
 
+pub fn init_tracing_stdout_with_filter_level(level: TracingFilterLevel) {
+    let mut subscriber = TracingSubscriber::default();
+    subscriber.with_timer(TracingTimer::Local);
+    subscriber.with_filter_level(level);
+
+    subscriber.init();
+}
+
 pub fn init_tracing_file_persistence() -> tracing_appender::non_blocking::WorkerGuard {
     let mut subscriber = TracingSubscriber::default();
     subscriber.with_timer(TracingTimer::Local);
